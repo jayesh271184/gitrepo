@@ -1,0 +1,101 @@
+
+Setting Label to Each Node which should be string only :
+====================================================== 
+Show Node Label :  kubectl get nodes --show-labels
+Set Label to Node 1 : kubectl label nodes worker-1 priority=1
+Set Label to Node 2 : kubectl label nodes worker-2 priority=2
+Edit/update any label to any node : kubectl edit nodes worker-2
+
+============================================================================
+kubectl create -f nodelabel.yml
+
+vi nodelabel.yml
+=============
+apiVersion: v1
+kind: Pod
+metadata:
+  name: nginxpodname
+  labels:
+    env: prod
+spec:
+  containers:
+  - name: nginxcontname
+    image: nginx
+  nodeSelector:
+    priority: low
+==============
+
+kubectl apply -f nodelabel.yml
+
+root@masterk8:~/defination# kpod --show-labels
+NAME            READY   STATUS    RESTARTS   AGE     LABELS
+nginx           1/1     Running   0          24h     run=nginx
+nginxpodapply   1/1     Running   0          36s     env=prod
+nginxpodname    1/1     Running   0          2m19s   env=prod
+root@masterk8:~/defination# vi nodelabel.yml
+root@masterk8:~/defination# kubectl apply -f nodelabel.yml
+pod/nginxpodapply configured
+root@masterk8:~/defination# kpod --show-labels
+NAME            READY   STATUS    RESTARTS   AGE     LABELS
+nginx           1/1     Running   0          24h     run=nginx
+nginxpodapply   1/1     Running   0          116s    env=prod-applychange
+nginxpodname    1/1     Running   0          3m39s   env=prod
+root@masterk8:~/defination#
+
+
+
+
+
+for editing pode post create command : need to edit the pod.
+
+root@masterk8:~/defination# kubectl edit pod nginxpodname
+pod/nginxpodname edited
+root@masterk8:~/defination# kpod --show-labels
+NAME            READY   STATUS    RESTARTS   AGE     LABELS
+nginx           1/1     Running   0          24h     run=nginx
+nginxpodapply   1/1     Running   0          3m58s   env=prod-applychange
+nginxpodname    1/1     Running   0          5m41s   env=prod-NewChange
+
+
+ReplicaSet
+=======================================================
+root@masterk8:~/defination# cat replicaset.yaml
+apiVersion: apps/v1
+kind: ReplicaSet
+metadata:
+  name: replicaset-name
+  labels:
+    env: replicalabel
+    type: prod
+    priority: high
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      type: prod
+      priority: high
+  template:
+    metadata:
+      labels:
+       type: prod
+       priority: high
+    spec:
+     containers:
+     - name: nginxcontname
+       image: nginx
+
+============================================================
+to know the status of replica set:  kubectl get rs
+or  : kubectl get replicasets.apps
+
+root@masterk8:~/defination# kpod -o wide --show-labels
+NAME                    READY   STATUS    RESTARTS   AGE   IP          NODE       NOMINATED NODE   READINESS GATES   LABELS
+nginxpodapply           1/1     Running   0          12h   10.44.0.3   worker-2   <none>           <none>            env=prod-applychange
+nginxpodname            1/1     Running   0          12h   10.44.0.2   worker-2   <none>           <none>            env=prod-NewChange
+replicaset-name-7tkbm   1/1     Running   0          11h   10.44.0.1   worker-2   <none>           <none>            priority=high,type=prod
+replicaset-name-82nk9   1/1     Running   0          11h   10.36.0.2   worker-1   <none>           <none>            priority=high,type=prod
+replicaset-name-tvssn   1/1     Running   0          11h   10.36.0.1   worker-1   <none>           <none>            priority=high,type=prod
+
+
+kubectl delete --all
+

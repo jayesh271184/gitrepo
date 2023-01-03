@@ -1,0 +1,5 @@
+Sidecar-storage
+Etcd backup restoration
+
+[20/04, 10:28 am] +91 84608 41491: https://docs.google.com/document/d/1z-srtVKdEO1ndWkgRYLpTq7M0JOw4Q4uy2y45k2-4_Q/edit?usp=sharing
+[20/04, 10:29 am] +91 98284 99983: https://itnext.io/practical-example-of-using-k8s-pv-pvc-with-pods-5471b91d2477

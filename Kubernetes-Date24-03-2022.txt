@@ -1,0 +1,135 @@
+Taints and Tolerations : https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/
+======================= 
+kubectl taint nodes worker-1 hardware=lowspec:NoSchedule
+kubectl taint nodes worker-2 hardware=highspec:NoSchedule
+
+Case 1 : Normal Pod Creation
+
+kubectl run nginx --image=nginx:latest
+
+pending : 
+root@masterk8:~# kubectl get pods
+NAME    READY   STATUS    RESTARTS   AGE
+nginx   0/1     Pending   0          85s
+
+Reason :
+
+kubectl describe pod nginx
+Events:
+  Type     Reason            Age   From               Message
+  ----     ------            ----  ----               -------
+  Warning  FailedScheduling  37s   default-scheduler  0/3 nodes are available: 1 node(s) had taint {hardware: highspec}, that the pod didn't tolerate, 1 node(s) had taint {hardware: lowspec}, that the pod didn't tolerate, 1 node(s) had taint {node-role.kubernetes.io/master: }, that the pod didn't tolerate.
+
+
+Case 2: Tolerations added 
+
+
+root@masterk8:~/defination/toleration# cat podwithtol.yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: nginx3
+  labels:
+    env: test
+spec:
+  containers:
+  - name: nginx
+    image: nginx
+    imagePullPolicy: IfNotPresent
+  tolerations:
+  - key: "hardware"
+    operator: "Equal"
+    value: "highspec"
+    effect: "NoSchedule"
+	
+root@masterk8:~/defination/toleration# kubectl get pods
+NAME     READY   STATUS    RESTARTS   AGE
+nginx    0/1     Pending   0          8m18s
+nginx2   0/1     Pending   0          3m59s
+nginx3   1/1     Running   0          10s
+
+Reason : kubectl describe pod nginx
+Events:
+  Type    Reason     Age   From               Message
+  ----    ------     ----  ----               -------
+  Normal  Scheduled  70s   default-scheduler  Successfully assigned default/nginx3 to worker-2
+  Normal  Pulled     69s   kubelet            Container image "nginx" already present on machine
+  Normal  Created    69s   kubelet            Created container nginx
+  Normal  Started    69s   kubelet            Started container nginx
+
+
+
+Node Affinity : https://kubernetes.io/docs/tasks/configure-pod-container/assign-pods-nodes-using-node-affinity/
+============== 
+kubectl get nodes --show-labels
+
+add label in node1 : kubectl label nodes worker-1 disktype=ssd
+add label in node2 : kubectl label nodes worker-2 disktype=sas
+
+root@masterk8:~/defination/toleration# kubectl get nodes --show-labels
+NAME       STATUS   ROLES                  AGE   VERSION   LABELS
+masterk8   Ready    control-plane,master   9d    v1.23.4   beta.kubernetes.io/arch=amd64,beta.kubernetes.io/os=linux,kubernetes.io/arch=amd64,kubernetes.io/hostname=masterk8,kubernetes.io/os=linux,node-role.kubernetes.io/control-plane=,node-role.kubernetes.io/master=,node.kubernetes.io/exclude-from-external-load-balancers=
+worker-1   Ready    <none>                 9d    v1.23.4   beta.kubernetes.io/arch=amd64,beta.kubernetes.io/os=linux,disktype=ssd,kubernetes.io/arch=amd64,kubernetes.io/hostname=worker-1,kubernetes.io/os=linux,priority=high,status=old
+worker-2   Ready    <none>                 9d    v1.23.4   beta.kubernetes.io/arch=amd64,beta.kubernetes.io/os=linux,disktype=sas,kubernetes.io/arch=amd64,kubernetes.io/hostname=worker-2,kubernetes.io/os=linux,priority=low,status=new
+ 
+vi affinity1.yaml-requiredDuringSchedulingIgnoredDuringExecution
+-----------------
+apiVersion: v1
+kind: Pod
+metadata:
+  name: nginx1
+spec:
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+        - matchExpressions:
+          - key: disktype
+            operator: In
+            values:
+            - sas
+  containers:
+  - name: nginx
+    image: nginx
+    imagePullPolicy: IfNotPresent
+	
+root@masterk8:~/defination/affinity# kubectl apply -f affinity1.yaml
+pod/nginx created
+root@masterk8:~/defination/affinity# kubectl get pod
+NAME    READY   STATUS    RESTARTS   AGE
+nginx   1/1     Running   0          9s
+root@masterk8:~/defination/affinity# kubectl get pod -o wide --show-labels
+NAME    READY   STATUS    RESTARTS   AGE   IP          NODE       NOMINATED NODE   READINESS GATES   LABELS
+nginx   1/1     Running   0          20s   10.36.0.1   worker-1   <none>           <none>            <none>
+
+
+vi affinity2.yaml-preferredDuringSchedulingIgnoredDuringExecution
+-----------------
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: nginxprefer
+spec:
+  affinity:
+    nodeAffinity:
+      preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 1
+        preference:
+          matchExpressions:
+          - key: disktype
+            operator: In
+            values:
+            - ssd          
+  containers:
+  - name: nginx
+    image: nginx
+    imagePullPolicy: IfNotPresent
+
+root@masterk8:~/defination/affinity# kubectl get pod -o wide --show-labels
+NAME              READY   STATUS    RESTARTS   AGE     IP          NODE       NOMINATED NODE   READINESS GATES   LABELS
+nginx             1/1     Running   0          3m53s   10.36.0.1   worker-1   <none>           <none>            <none>
+nginx1            1/1     Running   0          3m5s    10.44.0.1   worker-2   <none>           <none>            <none>
+nginxwithprefer   1/1     Running   0          7s      10.36.0.2   worker-1   <none>           <none>            <none>
+
+	

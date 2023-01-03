@@ -1,0 +1,36 @@
+LiveNess probe
+==============
+Monitor the pod Service post pod created. If services in not running in pod or in hang ...New Pod will create and old pod delted.
+
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: liveness1
+  name: liveness1
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: liveness
+  template:
+    metadata:
+      labels:
+        app: liveness
+    spec:
+      containers:
+      - image: devopstechlab1/liveness-nodejs-unhealthy
+        name: web-liveness1
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 8080
+          initialDelaySeconds: 15
+		  
+ConfigMap
+=========
+
+Secrets
+======= 
+

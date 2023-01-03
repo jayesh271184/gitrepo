@@ -1,0 +1,57 @@
+Master :  ssh -i gcloud_kubctl jayesh@34.125.85.154
+Work1 : ssh -i gcloud_kubctl jayesh@34.125.63.255
+Work2 : ssh -i gcloud_kubctl jayesh@34.125.201.35
+
+Master Node : Controller/Api/Scheduler/Etcd
+Worker Node : Kublet/kub-proxy/runtime-container
+
+echo alias knode="kubectl get nodes" >>~/.bashrc;source .bashrc
+echo alias knode="kubectl get pods" >>~/.bashrc;source .bashrc
+
+kubectl run nginx --image=nginx
+kubectl get pods
+kubectl describe pod nginx
+kubectl get pods nginx -o wide 
+kubectl get pods nginx -o yaml
+kubectl create -f <yaml>
+kubectl get pods --show-lables
+
+show only pods which has label env
+-----------------------------------
+kubectl get pods -l env
+
+
+kubectl describe pod pod_name
+
+
+root@masterk8:~/defination# kubectl get pod
+NAME            READY   STATUS    RESTARTS   AGE
+nginx           1/1     Running   0          24h
+nginxpodapply   1/1     Running   0          5m30s
+nginxpodname    1/1     Running   0          7m13s
+root@masterk8:~/defination#
+root@masterk8:~/defination#
+root@masterk8:~/defination# kubectl delete pod nginx
+pod "nginx" deleted
+root@masterk8:~/defination#
+
+
+vi 1.node.yaml
+
+apiVersion:V1
+kind: Pod
+metadata:
+	name:nginx
+	labels:
+		env:prod
+		type:frontend
+spec:
+	containers:
+	- name: nginx
+	  image: nginx:latest
+	  port:
+	  - containerPort:80
+	  
+
+
+elinks https://10.40.0.1

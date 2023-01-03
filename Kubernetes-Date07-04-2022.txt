@@ -1,0 +1,13 @@
+Cluster Upgrade Process :
+======================== 
+
+
+
+
+Maintance activity :
+====================
+Below Commands will stops schedulling temporarily and start again once activity done.
+
+kubectl cordon <nodename>
+kubectl uncordon <nodename>
+kubectl drain <nodename> ---> It will shift the load to other server and cordon the node.

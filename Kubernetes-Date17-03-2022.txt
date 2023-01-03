@@ -1,0 +1,145 @@
+Service
+=======
+1. Node port Service
+2. Cluster IP service
+3. Load balancer service
+
+kubectl exec <podname> -- <Command>
+kubectl exec ng
+
+
+Create ReplicaSets
+
+apiVersion: apps/v1
+kind: ReplicaSet
+metadata:
+ name: devops-rc
+spec:
+ replicas: 3
+ selector:
+   matchLabels:
+     app: myweb
+ template:
+   metadata:
+     name: myweb
+     labels:
+       app: myweb
+       type: frontend
+   spec:
+     containers:
+       - name: myweb-container
+         image: devopstechlab1/kubweb
+Create Service
+
+apiVersion: v1
+kind: Service
+metadata:
+ name: mynodeport-service
+spec:
+ type: NodePort
+ ports:
+   - targetPort: 80
+     port: 80
+     nodePort: 30010
+ selector:
+   app: myweb
+   type: frontend
+kubectl apply -f devops_NodeService.yaml
+k get endpoints
+k get services
+
+kubectl exec nginx3 -- curl -s 10.107.197.149
+
+
+root@masterk8:~/defination# cat devops_clusterIPService.yaml
+apiVersion: v1
+kind: Service
+metadata:
+ name: myclusterport-service
+spec:
+ ports:
+   - targetPort: 80
+     port: 80
+ selector:
+   app: myweb
+   type: backend
+   
+root@masterk8:~/defination# kubectl apply -f devops_clusterIPService.yaml
+root@masterk8:~/defination# kubectl get services
+NAME                    TYPE        CLUSTER-IP       EXTERNAL-IP   PORT(S)        AGE
+kubernetes              ClusterIP   10.96.0.1        <none>        443/TCP        2d
+myclusterport-service   ClusterIP   10.99.84.100     <none>        80/TCP         5s
+mynodeport-service      NodePort    10.110.121.194   <none>        80:30010/TCP   4m25s
+
+
+
+
+Open All Firewall Port in Google Cloud Instance: https://www.cloudsavvyit.com/4932/how-to-open-firewall-ports-on-a-gcp-compute-engine-instance/
+
+
+
+root@masterk8:~/defination# k get nodes
+NAME       STATUS   ROLES                  AGE   VERSION
+masterk8   Ready    control-plane,master   2d    v1.23.4
+worker-1   Ready    <none>                 2d    v1.23.4
+worker-2   Ready    <none>                 2d    v1.23.4
+root@masterk8:~/defination#
+root@masterk8:~/defination#
+root@masterk8:~/defination#
+root@masterk8:~/defination#
+root@masterk8:~/defination# k get pods
+NAME                    READY   STATUS    RESTARTS   AGE
+nginxpodapply           1/1     Running   0          24h
+nginxpodname            1/1     Running   0          24h
+replicaset-name-7tkbm   1/1     Running   0          23h
+replicaset-name-82nk9   1/1     Running   0          23h
+replicaset-name-p4928   1/1     Running   0          11h
+root@masterk8:~/defination#
+root@masterk8:~/defination#
+root@masterk8:~/defination#
+root@masterk8:~/defination# k delete pods -- all
+Error from server (NotFound): pods "all" not found
+root@masterk8:~/defination# k delete pods --all
+pod "nginxpodapply" deleted
+pod "nginxpodname" deleted
+pod "replicaset-name-7tkbm" deleted
+pod "replicaset-name-82nk9" deleted
+pod "replicaset-name-p4928" deleted
+root@masterk8:~/defination#
+root@masterk8:~/defination#
+root@masterk8:~/defination# k get pods
+NAME                    READY   STATUS    RESTARTS   AGE
+replicaset-name-cn6kv   1/1     Running   0          8s
+replicaset-name-cpptv   1/1     Running   0          8s
+replicaset-name-p552z   1/1     Running   0          8s
+root@masterk8:~/defination#
+root@masterk8:~/defination#
+root@masterk8:~/defination#
+root@masterk8:~/defination# k get rs
+NAME              DESIRED   CURRENT   READY   AGE
+replicaset-name   3         3         3       23h
+root@masterk8:~/defination# k delete rs replicaset-name
+replicaset.apps "replicaset-name" deleted
+root@masterk8:~/defination#
+root@masterk8:~/defination#
+root@masterk8:~/defination#
+root@masterk8:~/defination# k delete pods --all
+
+
+root@masterk8:~/defination# kubectl apply -f devops_NodeService.yaml
+service/mynodeport-service created
+root@masterk8:~/defination# k get services
+NAME                 TYPE        CLUSTER-IP       EXTERNAL-IP   PORT(S)        AGE
+kubernetes           ClusterIP   10.96.0.1        <none>        443/TCP        2d
+mynodeport-service   NodePort    10.110.121.194   <none>        80:30010/TCP   8s
+root@masterk8:~/defination# k get endpoints
+NAME                 ENDPOINTS                                AGE
+kubernetes           10.182.0.5:6443                          2d
+mynodeport-service   10.36.0.1:80,10.36.0.2:80,10.44.0.1:80   36s
+root@masterk8:~/defination#
+root@masterk8:~/defination#
+
+
+
+deployments
+===========

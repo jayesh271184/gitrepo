@@ -1,0 +1,88 @@
+Deployment
+========== 
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+  labels:
+    app: nginx
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:1.14.2
+        ports:
+        - containerPort: 80
+
+
+kubectl rollout history deployment/nginx-deployment
+kubectl rollout status deployment nginx-deployment
+kubectl describe deployment nginx-deployment
+kubectl annotate deployment/nginx-deployment kubernetes.io/change-cause="image updated to 1.14.1"
+kubectl rollout history deployment/nginx-deployment --revision=2
+kubectl rollout undo deployment/nginx-deployment
+kubectl rollout undo deployment/nginx-deployment --to-revision=2
+
+
+Namespace
+==========
+kubectl get namespace
+kubectl get deployment --all-namespaces
+kubectl get deployment -A
+kubectl get namespaces --show-labels
+kubectl config set-context --current --namespace=<insert-namespace-name-here>
+kubectl config view --minify | grep namespace
+
+root@masterk8:~/defination/namespace# kubectl run nginx11 --image=nginx -n qa
+pod/nginx11 created
+root@masterk8:~/defination/namespace# kubectl get pod -A
+NAMESPACE     NAME                                READY   STATUS             RESTARTS     AGE
+default       nginx-deployment-6c558b7cd5-mjt9n   0/1     ImagePullBackOff   0            42m
+default       nginx-deployment-ff6655784-8ptzl    1/1     Running            0            48m
+default       nginx-deployment-ff6655784-slqpv    1/1     Running            0            48m
+default       nginx-deployment-ff6655784-x52nr    1/1     Running            0            47m
+kube-system   coredns-64897985d-4krdn             1/1     Running            0            8d
+kube-system   coredns-64897985d-v9kxq             1/1     Running            0            8d
+kube-system   etcd-masterk8                       1/1     Running            0            8d
+kube-system   kube-apiserver-masterk8             1/1     Running            0            8d
+kube-system   kube-controller-manager-masterk8    1/1     Running            0            8d
+kube-system   kube-proxy-h4mc9                    1/1     Running            0            8d
+kube-system   kube-proxy-p4sc8                    1/1     Running            0            8d
+kube-system   kube-proxy-sbg4q                    1/1     Running            0            8d
+kube-system   kube-scheduler-masterk8             1/1     Running            0            8d
+kube-system   weave-net-547cn                     2/2     Running            0            8d
+kube-system   weave-net-dfrhg                     2/2     Running            1 (8d ago)   8d
+kube-system   weave-net-x8s7b                     2/2     Running            1 (8d ago)   8d
+qa            nginx11                             1/1     Running            0            10s
+root@masterk8:~/defination/namespace# kubectl get pod -n qa
+NAME      READY   STATUS    RESTARTS   AGE
+nginx11   1/1     Running   0          21s
+
+root@masterk8:~/defination/namespace# kubectl config set-context --current --namespace=qa
+Context "kubernetes-admin@kubernetes" modified.
+root@masterk8:~/defination/namespace# kubectl get pod
+NAME      READY   STATUS    RESTARTS   AGE
+nginx11   1/1     Running   0          2m21s
+
+
+root@masterk8:~/defination/namespace# kubectl config set-context --current --namespace=default
+Context "kubernetes-admin@kubernetes" modified.
+root@masterk8:~/defination/namespace# kubectl get pod
+NAME                                READY   STATUS             RESTARTS   AGE
+nginx-deployment-6c558b7cd5-mjt9n   0/1     ImagePullBackOff   0          45m
+nginx-deployment-ff6655784-8ptzl    1/1     Running            0          50m
+nginx-deployment-ff6655784-slqpv    1/1     Running            0          50m
+nginx-deployment-ff6655784-x52nr    1/1     Running            0          50m
+root@masterk8:~/defination/namespace#
+
+	
+
+

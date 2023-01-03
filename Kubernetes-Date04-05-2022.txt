@@ -1,0 +1,95 @@
+Application Load balancer (ALB)
+=============================== 
+
+first create ingress controller to create ingress request 
+ 
+https://kubernetes-sigs.github.io/aws-load-balancer-controller/v2.2/deploy/installation/
+
+https://aws.amazon.com/blogs/opensource/kubernetes-ingress-aws-alb-ingress-controller/
+
+
+
+eksctl get cluster
+
+
+- Now create an IAM OIDC provider and associate it with your cluster:
+
+eksctl utils associate-iam-oidc-provider --cluster=devopstest --approve
+
+=> Deploy AWS ALB Ingress controller
+
+Download IAM policy for the AWS Load Balancer Controller 
+
+curl -o iam-policy.json https://raw.githubusercontent.com/kubernetes-sigs/aws-load-balancer-controller/v2.2.1/docs/install/iam_policy.json
+
+
+aws iam create-policy \
+    --policy-name AWSLoadBalancerControllerIAMPolicyDevopsTraining \
+    --policy-document file://iam-policy.json
+
+ARN: arn:aws:iam::366271006801:policy/AWSLoadBalancerControllerIAMPolicyDevopsTraining
+
+- deploy the relevant RBAC roles and role bindings as required by the AWS ALB Ingress controller:
+
+kubectl apply -f https://raw.githubusercontent.com/kubernetes-sigs/aws-alb-ingress-controller/v1.1.4/docs/examples/rbac-role.yaml
+
+
+- Create a IAM role and ServiceAccount for the AWS Load Balancer controller, use the ARN from the step above 
+
+
+
+
+
+www.devopstechlab.com /var/www/html
+www.devopstechlab.com/web /var/www/html/web
+
+eksctl create iamserviceaccount \
+--cluster=devopstest \
+--namespace=kube-system \
+--name=aws-load-balancer-controller \
+--attach-policy-arn=arn:aws:iam::366271006801:policy/AWSLoadBalancerControllerIAMPolicyDevopsTraining \
+--override-existing-serviceaccounts \
+--approve
+
+
+- Install cert-manager
+
+kubectl apply --validate=false -f https://github.com/jetstack/cert-manager/releases/download/v1.0.2/cert-manager.yaml
+
+- Download spec for load balancer controller. 
+
+wget https://raw.githubusercontent.com/kubernetes-sigs/aws-load-balancer-controller/v2.2.1/docs/install/v2_2_1_full.yaml
+
+Change the cluster name and remove service account part from file
+
+- kubectl apply -f v2_2_1_full.yaml
+
+- kubectl get pod -n kube-system
+
+Now Ingress controller is created
+
+
+=> Deploy sample application
+
+wget https://raw.githubusercontent.com/kubernetes-sigs/aws-alb-ingress-controller/v1.1.4/docs/examples/2048/2048-namespace.yaml
+
+kubectl apply -f 2048-namespace.yaml
+
+kubectl apply -f https://raw.githubusercontent.com/kubernetes-sigs/aws-alb-ingress-controller/v1.1.4/docs/examples/2048/2048-deployment.yaml
+
+kubectl apply -f https://raw.githubusercontent.com/kubernetes-sigs/aws-alb-ingress-controller/v1.1.4/docs/examples/2048/2048-service.yaml
+
+
+=> Deploy an Ingress resource for the 2048 game:
+
+kubectl apply -f https://raw.githubusercontent.com/kubernetes-sigs/aws-alb-ingress-controller/v1.1.4/docs/examples/2048/2048-ingress.yaml
+
+
+
+
+Metrics Server
+========================
+
+Link: https://github.com/kubernetes-sigs/metrics-server
+
+kubectl apply -f https://github.com/kubernetes-sigs/metrics-server/releases/latest/download/components.yaml

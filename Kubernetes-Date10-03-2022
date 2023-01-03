@@ -1,0 +1,34 @@
+Master :  ssh -i gcloud_kubctl jayesh@34.125.85.154
+Work1 : ssh -i gcloud_kubctl jayesh@34.125.63.255
+Work2 : ssh -i gcloud_kubctl jayesh@34.125.201.35
+
+Master Node : Controller/Api/Scheduler/Etcd
+Worker Node : Kublet/kub-proxy/runtime-container
+
+
+kubectl run nginx --image=nginx
+kubectl get pods
+kubectl decribe pod nginx1
+kubectl get pods nginx -o wide 
+kubectl get pods nginx -o yaml
+kubectl create -f <yaml>
+
+vi 1.node.yaml
+
+apiVersion:V1
+kind: Pod
+metadata:
+	name:nginx
+	labels:
+		env:prod
+		type:frontend
+spec:
+	containers:
+	- name: nginx
+	  image: nginx:latest
+	  port:
+	  - containerPort:80
+	  
+
+
+elinks https://10.40.0.1

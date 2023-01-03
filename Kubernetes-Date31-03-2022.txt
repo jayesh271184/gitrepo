@@ -1,0 +1,117 @@
+daemonsets
+========== 
+kubectl get daemonsets.app -n kube-system
+
+root@masterk8:~# kubectl get daemonsets.apps -n kube-system
+NAME         DESIRED   CURRENT   READY   UP-TO-DATE   AVAILABLE   NODE SELECTOR            AGE
+kube-proxy   3         3         3       3            3           kubernetes.io/os=linux   15d
+weave-net    3         3         3       3            3           <none>                   15d
+
+Vi daemonset.yaml
+-----------------
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+ name: ssd-monitor
+spec:
+ selector:
+   matchLabels:
+     app: ssd-monitor
+ template:
+   metadata:
+     labels:
+       app: ssd-monitor
+   spec:
+     containers:
+     - name: main
+       image: devopstechlab1/ssd-monitor
+
+root@masterk8:~/defination/daemonsets# kubectl get daemonsets.apps
+NAME          DESIRED   CURRENT   READY   UP-TO-DATE   AVAILABLE   NODE SELECTOR   AGE
+ssd-monitor   2         2         2       2            2           <none>          83s
+
+=========================================================
+
+root@masterk8:~/defination/daemonsets# cat daemonset-withnodeselector.yaml
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+ name: ssd1-monitor
+spec:
+ selector:
+   matchLabels:
+     app: ssd1-monitor
+ template:
+   metadata:
+     labels:
+       app: ssd1-monitor
+   spec:
+     containers:
+     - name: main
+       image: devopstechlab1/ssd-monitor
+     nodeSelector:
+       priority: low
+
+root@masterk8:~/defination/daemonsets# kubectl get daemonsets.apps
+NAME           DESIRED   CURRENT   READY   UP-TO-DATE   AVAILABLE   NODE SELECTOR   AGE
+ssd-monitor    2         2         2       2            2           <none>          4m52s
+ssd1-monitor   1         1         1       1            1           priority=low    7s
+
+Rediness
+======== 
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: readiness
+  name: readiness
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: readiness
+  template:
+    metadata:
+      labels:
+        app: readiness
+    spec:
+      containers:
+      - image: devopstechlab1/kubweb
+        name: readiness
+        ports:
+        - containerPort: 80
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 80
+          initialDelaySeconds: 15
+
+==================
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: readiness
+  name: readiness
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: readiness
+  template:
+    metadata:
+      labels:
+        app: readiness
+    spec:
+      containers:
+      - image: devopstechlab1/kubweb
+        name: readiness
+        ports:
+        - containerPort: 80
+        readinessProbe:
+          exec:
+            command:
+            - ls
+            - /var/ready
+          initialDelaySeconds: 15
+

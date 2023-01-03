@@ -1,0 +1,84 @@
+yum config-manager --add-repo=https://download.docker.com/linux/centos/docker-ce.repo
+yum install https://download.docker.com/linux/centos/7/x86_64/stable/Packages/containerd.io-1.2.6-3.3.el7.x86_64.rpm -y
+yum install docker-ce -y --allowerasing
+systemctl enable docker
+systemctl start docker
+
+cat <<EOF > /etc/yum.repos.d/kubernetes.repo
+[kubernetes]
+name=Kubernetes
+baseurl=https://packages.cloud.google.com/yum/repos/kubernetes-el7-x86_64
+enabled=1
+gpgcheck=1
+repo_gpgcheck=1
+gpgkey=https://packages.cloud.google.com/yum/doc/yum-key.gpg https://packages.cloud.google.com/yum/doc/rpm-package-key.gpg
+EOF
+
+yum install kubeadm -y
+swapoff -a
+
+rm /etc/containerd/config.toml
+systemctl restart containerd
+
+systemctl enable kubelet
+systemctl start kubelet
+kubeadm init (Kubeadm reset //if required)
+##for master node, we need to get token for workernode connectivity##
+
+
+mkdir -p $HOME/.kube
+cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
+chown $(id -u):$(id -g) $HOME/.kube/config
+
+-----Tokan from kubeadm init logs -----------//
+kubeadm join 10.121.27.22:6443 --token 1nsj18.b5tk3cbf4rxv7jrh \
+	--discovery-token-ca-cert-hash sha256:12441958ddc367ec80e49538f6c8ac4bf1e9a54ba3ce88d38444b8f3bff9c796
+
+kubectl apply -f "https://cloud.weave.works/k8s/net?k8s-version=$(kubectl version | base64 | tr -d '\n')"
+
+kubectl get nodes
+
+
+
+
+##########auto completition###########
+
+echo 'source <(kubectl completion bash)' >>~/.bashrc
+
+echo 'alias k=kubectl' >>~/.bashrc
+echo 'complete -F __start_kubectl k' >>~/.bashrc
+
+source .bashrc
+#################################################################
+
+
+
+######WORKERNODE NOT READY####################################
+
+For the Error : container runtime network not ready: NetworkReady=false reason:NetworkPluginNotReady message:Network plugin returns error: cni plugin not initialized
+
+
+cat /etc/cni/net.d/10-weave.conflist
+{
+    "cniVersion": "0.3.0",
+    "name": "weave",
+    "plugins": [
+        {
+            "name": "weave",
+            "type": "weave-net",
+            "hairpinMode": true
+        },
+        {
+            "type": "portmap",
+            "capabilities": {"portMappings": true},
+            "snat": true
+        }
+    ]
+}
+###############################################################
+
+
+################LABEL NODE#############################################################
+
+kubectl label node cb2.4xyz.couchbase.com node-role.kubernetes.io/worker=worker
+#######################################################################################
